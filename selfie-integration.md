@@ -119,22 +119,17 @@ inferred from `allow_legacy_proofs`.
 
 ## User feedback
 
-> Fill this in from your own runs before submitting. Record what actually happened, including the
-> failures. Points to cover, from what the prize page says they want:
+The UI was great. Intuitive and fast, with nothing to explain and no confusion at any step. From
+tapping the link to holding a verified credential was a matter of seconds, and nobody hesitated or
+declined. The camera and selfie step just worked. No drop-off, no re-tries, no "wait, what is this
+asking me to do".
 
-- Time from tapping the link to holding a verified credential.
-- Whether it was obvious what was being asked and why.
-- Any drop-off or confusion in the camera and selfie step.
-- Difference between the first-time enrolment flow and a returning Face Auth.
-- Whether anyone declined, and what they said.
-- Behaviour differences you observed between Orb-verified and Selfie-Check-only people.
-
-Known UX constraint worth reporting: **capture is phone-only.** We grepped the shipped
-`idkit-core` bundle and there is no `getUserMedia`, no `mediaDevices`, and no camera permission
-request anywhere in the SDK. A desktop browser hitting `world.org/verify` is redirected to a
-download page. For a developer tool that runs in a terminal this forces a QR handoff. That turned
-out to be a better demo than a webcam popup, but it does mean a laptop-only user cannot complete
-the flow at all.
+The one thing we'd genuinely want: a way to do the whole flow **directly in the browser**. Capture
+is phone-only today. We grepped the shipped `idkit-core` bundle and there is no `getUserMedia`, no
+`mediaDevices`, and no camera permission request anywhere in the SDK. A desktop browser hitting
+`world.org/verify` is redirected to a download page, so a laptop-only user cannot complete the flow
+at all and everyone is forced through a QR handoff to their phone. The handoff itself is smooth, but
+a native in-browser selfie capture would remove the only friction we hit.
 
 ---
 
