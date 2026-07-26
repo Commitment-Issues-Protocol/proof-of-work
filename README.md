@@ -3,9 +3,12 @@
 World ID / Selfie Check + AgentKit integration for the **Commitment Issues Protocol**,
 built and verified at ETHGlobal Lisbon 2026.
 
-Integration notes, evidence, and developer feedback live in
-[`selfie-integration.md`](./selfie-integration.md) — everything there was verified by running
-it, not read off a docs page.
+- [`selfie-integration.md`](./selfie-integration.md) — integration notes, evidence, and developer
+  feedback, all verified by running it rather than read off a docs page.
+- [`WORLD_INTEGRATION.md`](./WORLD_INTEGRATION.md) — the call-by-call mechanics for AgentKit +
+  Selfie Check, and where they plug into `signing-service`.
+- [`AGENTKIT_STRATEGY.md`](./AGENTKIT_STRATEGY.md) — the decision log: why we split nullifier from
+  `humanId`, why a budget beats a gate, what we refused to build, and what is next.
 
 ## Deployment
 
