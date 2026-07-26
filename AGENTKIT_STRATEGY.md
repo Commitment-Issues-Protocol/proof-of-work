@@ -89,3 +89,49 @@ the transport problem below), so a hard `enforce` default would brick the very c
 supposed to use this. Shipping `warn` means the plumbing works end to end today and flipping to
 `enforce` is a one-env-var decision once the header transport lands — not a code change under
 deadline pressure.
+
+## Learnings from a weekend on the beta SDK
+
+Ordered by how much time each cost us.
+
+1. **The header has nowhere to ride.** git talks to the ssh-agent over a unix socket, and a
+   socket carries no HTTP headers. Nothing naturally threads an `agentkit` header from git
+   through the agent into `signing-service`. The workable answer: the ssh-agent itself holds
+   `AGENT_PRIVATE_KEY` and mints the header when it POSTs. The AgentKit chain still genuinely
+   runs and still resolves to an Orb-attested human — the socket is just plumbing in front of it.
+   This is the single biggest open design question and it is architectural, not a bug.
+
+2. **`resourceUri` must match byte-for-byte.** `validateAgentkitMessage(payload, resourceUri)`
+   checks the audience against what the agent signed. Build it from `req.protocol`, `req.host` and
+   `req.originalUrl` on the server and make sure the client signs the identical string, or every
+   request 403s with a message that does not obviously point at a URL mismatch.
+
+3. **`maxAge` defaults to 5 minutes.** Fine for us, but it means a replayed header stays valid for
+   that window. If you need tighter freshness, set it explicitly — do not assume it is seconds.
+
+4. **`lookupHuman` returning `null` is the whole signal.** No exception, no error — a wallet that
+   was never registered by a verified human just resolves to `null`. That *is* "this is an
+   unbacked bot". Treat null as a first-class reject, not an edge case.
+
+5. **`InMemoryAgentKitStorage` loses everything on restart.** Same as our budget map. Fine for a
+   demo, explicitly not fine for anything real — a restart refills every human's daily allowance.
+   Noted as a known ceiling, not shipped as a feature.
+
+6. **Registration needs an Orb, once, and is already done.** Selfie Check cannot register an
+   agent — only an Orb-verified human scanning a QR can. Do it first because everything downstream
+   depends on the wallet already being in AgentBook, and never re-run it casually: a new wallet
+   means a new registration means another physical Orb scan.
+
+## What we would build next
+
+The honest limits, and where the interesting work is.
+
+- **Persist the budget.** Move the per-human counter out of memory into anything durable so a
+  restart cannot mint free approvals. Small, obvious, not done because it is a weekend.
+- **Multi-approver on the sharpest paths.** For `release/**` and workflow files, require two
+  distinct `humanId`s. The primitive already supports it; the policy layer does not yet enforce a
+  quorum.
+- **The compromised-machine gap.** The proof binds to the diff hash the *service* was shown. A
+  compromised client that displays one diff and signs another defeats that, and no amount of
+  liveness fixes it. This is the most interesting unsolved problem and it is where we would spend
+  the next weekend.
