@@ -55,3 +55,37 @@ you shrug at and becomes something you *spend*.
 
 That single design choice — count per human, not per key — is what turns a presence check into an
 accountability primitive. It is the reason we needed AgentKit at all rather than just IDKit.
+
+## What we deliberately refused to build
+
+AgentKit ships access modes — `free`, `free-trial`, `discount` — that hand agents cheaper or
+gated access once a human backs them. We use **none of them**, on purpose. Granting human-backed
+benefits to AI agents (API calls, discounts, and the like) is the explicitly disqualified pattern
+for this track. We use AgentKit for identity resolution only: attribute and rate-limit, never
+reward.
+
+Also off the table, for the same reason:
+
+- **Agent reputation / trust scores.** Anything that renders as a score next to an agent name is
+  the wrong shape. Identity is not merit; a resolved `humanId` says *who is answerable*, not *who
+  is good*.
+- **Any linkage that de-anonymises.** We never store the mapping between `humanId` and a real
+  identity, because we never learn it. The whole system runs on a nullifier and a hash. There is
+  nothing to leak because there is nothing to store.
+
+Stating the negatives matters as much as the features: the restraint is the design.
+
+## Enforcement modes, and why the default is `warn`
+
+The AgentKit check runs in one of three modes (`WORLD_AGENTKIT`):
+
+- `enforce` — reject any caller that does not resolve to a registered human. Correct for a real
+  deployment and what we use for the demo.
+- `warn` — run the check, log the outcome, but let the request through. **This is the default.**
+- `off` — skip it entirely.
+
+`warn` is the default deliberately. The `ssh-agent` does not yet mint the `agentkit` header (see
+the transport problem below), so a hard `enforce` default would brick the very client that is
+supposed to use this. Shipping `warn` means the plumbing works end to end today and flipping to
+`enforce` is a one-env-var decision once the header transport lands — not a code change under
+deadline pressure.
